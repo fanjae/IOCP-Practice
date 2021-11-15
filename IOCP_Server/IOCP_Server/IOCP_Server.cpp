@@ -121,5 +121,61 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
+DWORD WINAPI makeThread(LPVOID hIOCP)
+{
+	HANDLE threadHandler = *((HANDLE *)hIOCP);
+	DWORD receiveBytes;
+	DWORD sendBytes;
+	DWORD completionKey;
+	DWORD flags;
+	struct SOCKETINFO *eventSocket;
+	while (1)
+	{
+		// 입출력 완료 대기
+		if (GetQueuedCompletionStatus(threadHandler, &receiveBytes, &completionKey, (LPOVERLAPPED *)&eventSocket, INFINITE) == 0)
+		{
+			printf("Error - GetQueuedCompletionStatus Failure\n");
+			closesocket(eventSocket->socket);
+			free(eventSocket);
+			return 1;
+		}
+		eventSocket->dataBuffer.len = receiveBytes;
+
+		if (receiveBytes == 0)
+		{
+			closesocket(eventSocket->socket);
+			free(eventSocket);
+			continue;
+		}
+		else
+		{
+			printf("TRACE - Receiver message : %s (%d bytes)\n", eventSocket->dataBuffer.buf, eventSocket->dataBuffer.len);
+			if (WSASend(eventSocket->socket, &(eventSocket->dataBuffer), 1, &sendBytes, 0, NULL, NULL) == SOCKET_ERROR)
+			{
+				if (WSAGetLastError() != WSA_IO_PENDING)
+				{
+					printf("Error - Fail WSASend(error_code : %d)\n", WSAGetLastError());
+				}
+			}
+			printf("TRACE - Send message : %s (%d bytes)\n", eventSocket->dataBuffer.buf, eventSocket->dataBuffer.len);
+			memset(eventSocket->messageBuffer, 0x00, MAX_BUFFER);
+
+			eventSocket->receiveBytes = 0;
+			eventSocket->sendBytes = 0;
+			eventSocket->dataBuffer.len = MAX_BUFFER;
+			eventSocket->dataBuffer.buf = eventSocket->messageBuffer;
+			flags = 0;
+
+			if (WSARecv(eventSocket->socket, &(eventSocket->dataBuffer), 1, &receiveBytes, &flags, &eventSocket->overlapped, NULL) == SOCKET_ERROR)
+			{
+				if (WSAGetLastError() != WSA_IO_PENDING)
+				{
+					printf("Error - Fail WSARecv(Error_code : %d)\n", WSAGetLastError());
+					{}
+				}
+			}
+		}
+	}
+}
 
 
