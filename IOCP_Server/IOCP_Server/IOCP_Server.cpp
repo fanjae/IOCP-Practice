@@ -54,6 +54,17 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
+	// 3. 수신 대기열 생성
+	if (listen(listenSocket, 5) == SOCKET_ERROR)
+	{
+		printf("Error - Fail listen\n");
+		// 6. 소켓종료
+		closesocket(listenSocket);
+		// Winsock end
+		WSACleanup();
+		return 1;
+	}
+
 	// 완료 결과를 처리하는 객체(CP : Completion Port) 생성
 	HANDLE hIOCP = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
 
@@ -129,6 +140,7 @@ DWORD WINAPI makeThread(LPVOID hIOCP)
 	DWORD completionKey;
 	DWORD flags;
 	struct SOCKETINFO *eventSocket;
+
 	while (1)
 	{
 		// 입출력 완료 대기
