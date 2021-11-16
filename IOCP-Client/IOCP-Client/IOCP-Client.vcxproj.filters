@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="IOCP_Client.cpp">
+    <ClCompile Include="IOCP-Client.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
