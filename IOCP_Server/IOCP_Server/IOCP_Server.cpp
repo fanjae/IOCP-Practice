@@ -183,7 +183,6 @@ DWORD WINAPI makeThread(LPVOID hIOCP)
 				if (WSAGetLastError() != WSA_IO_PENDING)
 				{
 					printf("Error - Fail WSARecv(Error_code : %d)\n", WSAGetLastError());
-					{}
 				}
 			}
 		}
